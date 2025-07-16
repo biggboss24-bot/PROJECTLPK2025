@@ -43,4 +43,109 @@ def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
             'steps': [
                 ('Intermediate tetrahedral', 50),
                 ('Proton transfer', 30),
-                ('Hidrat terbentuk'
+                ('Hidrat terbentuk', 20)
+            ],
+            'products': ['OC(O)C'],
+            'activation_energy': 75 - (ph * 2) - (temp * 0.1),
+            'thermodynamics': 'Eksotermik'
+        })
+    elif r1 == 'CC(=O)O' and r2 == 'CO':
+        pathways.append({
+            'name': 'Esterifikasi',
+            'steps': [
+                ('Protonasi karbonil', 60),
+                ('Serangan nukleofilik', 40),
+                ('Dehidrasi', 30)
+            ],
+            'products': ['CC(=O)OC', 'O'],
+            'activation_energy': 90 - (ph * 3) - (temp * 0.2),
+            'thermodynamics': 'Endotermik'
+        })
+    else:
+        pathways.append({
+            'name': 'Reaksi Adisi',
+            'steps': [
+                ('Inisiasi', 40),
+                ('Propagasi', 30),
+                ('Terminasi', 20)
+            ],
+            'products': [f'{r1}{r2}'],
+            'activation_energy': 85 - (ph * 1.5) - (temp * 0.15),
+            'thermodynamics': 'Eksotermik'
+        })
+    return pathways
+
+# Prediksi saat tombol diklik
+if st.button('Prediksi Jalur Reaksi'):
+    if not validate_smiles(reactant1) or not validate_smiles(reactant2):
+        st.error('❌ Format SMILES tidak valid!')
+    else:
+        with st.spinner('🔍 Menganalisis kemungkinan jalur reaksi...'):
+            try:
+                results = predict_reaction_pathway(
+                    reactant1, reactant2, temperature, ph, concentration, solvent, catalyst
+                )
+                st.success('✅ Prediksi berhasil!')
+                for pathway in results:
+                    st.subheader(f"🔹 Jalur Reaksi: {pathway['name']}")
+
+                    # Tampilkan energi tahapan sebagai tabel
+                    st.markdown("### Energi Setiap Tahapan")
+                    df_steps = pd.DataFrame(pathway['steps'], columns=["Tahapan", "Energi (kJ/mol)"])
+                    st.table(df_steps)
+
+                    # Info tambahan
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric("Energi Aktivasi", f"{pathway['activation_energy']:.1f} kJ/mol")
+                    with col2:
+                        st.metric("Termodinamika", pathway['thermodynamics'])
+
+                    # Produk reaksi
+                    st.markdown("### Produk Prediksi")
+                    mols = []
+                    legends = []
+                    for prod in pathway['products']:
+                        mol = Chem.MolFromSmiles(prod)
+                        if mol:
+                            mols.append(mol)
+                            legends.append(prod)
+                        else:
+                            st.warning(f"⚠️ Produk tidak valid: {prod}")
+
+                    if mols:
+                        img = Draw.MolsToGridImage(mols, molsPerRow=3, subImgSize=(300, 300), legends=legends)
+                        st.image(img)
+                    else:
+                        st.error("❌ Tidak ada produk valid untuk divisualisasikan.")
+
+                    st.divider()
+
+            except Exception as e:
+                st.error(f"Terjadi kesalahan: {e}")
+
+# Rekomendasi kondisi optimal
+st.header("📊 Analisis Tambahan")
+with st.expander("🧠 Rekomendasi Kondisi Optimal"):
+    rekomendasi = {
+        'Parameter': ['Suhu', 'pH', 'Konsentrasi', 'Pelarut'],
+        'Nilai Saat Ini': [f"{temperature}°C", ph, f"{concentration} M", solvent],
+        'Rekomendasi': [
+            f"{temperature + 10}°C" if temperature < 100 else "Cukup",
+            "Asam (pH 3-6)" if ph > 6 else "Basa (pH 8-11)" if ph < 8 else "Netral (baik)",
+            f"{concentration * 1.2:.1f} M" if concentration < 3 else "Cukup",
+            "Pertahankan" if solvent in ['Air', 'Etanol'] else "Pertimbangkan Air"
+        ]
+    }
+    st.table(pd.DataFrame(rekomendasi))
+
+# Simpan hasil (simulasi)
+with st.expander("📄 Simpan Laporan"):
+    st.download_button(
+        label="📥 Unduh PDF",
+        data="Simulasi laporan reaksi.",
+        file_name="hasil_reaksi.pdf",
+        mime="application/pdf"
+    )
+
+st.caption("⚠️ Ini adalah simulasi prediksi jalur reaksi. Hasil nyata dapat berbeda.")
