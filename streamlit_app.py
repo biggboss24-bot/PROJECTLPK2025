@@ -1,151 +1,188 @@
 import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+from rdkit import Chem
+from rdkit.Chem import Draw
 import pandas as pd
-import math
-from pathlib import Path
+from io import StringIO
 
-# Set the title and favicon that appear in the Browser's tab bar.
-st.set_page_config(
-    page_title='GDP dashboard',
-    page_icon=':earth_americas:', # This is an emoji shortcode. Could be a URL too.
-)
+st.title('🪄 Reaction Pathway Predictor')
+st.subheader('Prediksi Jalur Reaksi Kimia Berdasarkan Parameter Analisis')
 
-# -----------------------------------------------------------------------------
-# Declare some useful functions.
+# Sidebar untuk parameter input
+with st.sidebar:
+    st.header('Parameter Reaksi')
+    temperature = st.slider('Suhu (°C)', 0, 200, 25)
+    ph = st.slider('pH', 0, 14, 7)
+    concentration = st.slider('Konsentrasi (mol/L)', 0.1, 5.0, 1.0)
+    solvent = st.selectbox('Pelarut', ['Air', 'Etanol', 'Aseton', 'Dietil Eter', 'DMSO'])
+    catalyst = st.checkbox('Ada Katalis?')
+    
+    if catalyst:
+        catalyst_type = st.selectbox('Jenis Katalis', [
+            'Asam', 'Basa', 'Logam Transisi', 'Enzim'
+        ])
 
-@st.cache_data
-def get_gdp_data():
-    """Grab GDP data from a CSV file.
+# Input senyawa awal
+st.header('Masukkan Reaktan')
+col1, col2 = st.columns(2)
+with col1:
+    reactant1 = st.text_input('Reaktan 1 (SMILES)', 'C=O')
+with col2:
+    reactant2 = st.text_input('Reaktan 2 (SMILES)', 'O')
 
-    This uses caching to avoid having to read the file every time. If we were
-    reading from an HTTP endpoint instead of a file, it's a good idea to set
-    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
-    """
+# Fungsi untuk validasi SMILES
+def validate_smiles(smiles):
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return False
+    return True
 
-    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
-    DATA_FILENAME = Path(__file__).parent/'data/gdp_data.csv'
-    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+# Fungsi untuk memprediksi jalur reaksi (simulasi)
+def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
+    # Ini adalah simulasi - dalam aplikasi nyata akan menggunakan library kimia
+    pathways = []
+    
+    # Contoh sederhana untuk reaksi aldehid + air
+    if r1 == 'C=O' and r2 == 'O':
+        pathways.append({
+            'name': 'Hidrasi Aldehid',
+            'steps': [
+                ('Pembentukan intermediate tetrahedral', 50),
+                ('Proton transfer', 30),
+                ('Pembentukan produk hidrat', 20)
+            ],
+            'products': ['OC(O)C'],
+            'activation_energy': 75 - (ph * 2) - (temp * 0.1),
+            'thermodynamics': 'Eksotermik'
+        })
+    
+    # Contoh lain untuk reaksi esterifikasi
+    elif r1 == 'CC(=O)O' and r2 == 'CO':
+        pathways.append({
+            'name': 'Esterifikasi',
+            'steps': [
+                ('Protonasi karbonil', 60),
+                ('Serangan nukleofilik', 40),
+                ('Dehidrasi', 30)
+            ],
+            'products': ['CC(=O)OC', 'O'],
+            'activation_energy': 90 - (ph * 3) - (temp * 0.2),
+            'thermodynamics': 'Endotermik'
+        })
+    else:
+        # Default pathway untuk senyawa acak
+        pathways.append({
+            'name': 'Reaksi Adisi',
+            'steps': [
+                ('Inisiasi', 40),
+                ('Propagasi', 30),
+                ('Terminasi', 20)
+            ],
+            'products': [f'{r1}{r2}'],
+            'activation_energy': 85 - (ph * 1.5) - (temp * 0.15),
+            'thermodynamics': 'Eksotermik'
+        })
+    
+    return pathways
 
-    MIN_YEAR = 1960
-    MAX_YEAR = 2022
+# Tombol prediksi
+if st.button('Prediksi Jalur Reaksi'):
+    if not validate_smiles(reactant1) or not validate_smiles(reactant2):
+        st.error('Format SMILES tidak valid untuk satu atau lebih reaktan!')
+    else:
+        with st.spinner('Menganalisis kemungkinan jalur reaksi...'):
+            # Dapatkan prediksi
+            pathways = predict_reaction_pathway(
+                reactant1, reactant2, temperature, ph, 
+                concentration, solvent, catalyst if catalyst else None
+            )
+            
+            # Tampilkan hasil
+            st.success('Prediksi berhasil!')
+            
+            for pathway in pathways:
+                st.subheader(f"Jalur: {pathway['name']}")
+                
+                # Diagram energi
+                st.markdown("### Diagram Energi Potensial")
+                fig, ax = plt.subplots()
+                
+                steps = [step[0] for step in pathway['steps']]
+                energies = [step[1] for step in pathway['steps']]
+                
+                # Tambahkan reaktan dan produk
+                steps = ['Reaktan'] + steps + ['Produk']
+                energies = [0] + energies + [energies[-1] - 20]
+                
+                ax.plot(steps, energies, marker='o')
+                ax.set_ylabel('Energi (kJ/mol)')
+                ax.set_xlabel('Tahapan Reaksi')
+                ax.set_title('Profil Energi Reaksi')
+                plt.xticks(rotation=45)
+                plt.tight_layout()
+                st.pyplot(fig)
+                
+                # Tampilkan parameter kunci
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Energi Aktivasi", f"{pathway['activation_energy']:.1f} kJ/mol")
+                with col2:
+                    st.metric("Termodinamika", pathway['thermodynamics'])
+                
+                # Tampilkan tahapan
+                st.markdown("### Tahapan Reaksi")
+                for i, step in enumerate(pathway['steps'], 1):
+                    st.markdown(f"{i}. *{step[0]}* - Energi: {step[1]} kJ/mol")
+                
+                # Tampilkan produk prediksi
+                st.markdown("### Produk Prediksi")
+                products = pathway['products']
+                
+                mols = []
+                legends = []
+                for p in products:
+                    mol = Chem.MolFromSmiles(p)
+                    if mol:
+                        mols.append(mol)
+                        legends.append(p)
+                
+                if mols:
+                    img = Draw.MolsToGridImage(mols, molsPerRow=3, subImgSize=(300,300), legends=legends)
+                    st.image(img)
+                
+                st.divider()
 
-    # The data above has columns like:
-    # - Country Name
-    # - Country Code
-    # - [Stuff I don't care about]
-    # - GDP for 1960
-    # - GDP for 1961
-    # - GDP for 1962
-    # - ...
-    # - GDP for 2022
-    #
-    # ...but I want this instead:
-    # - Country Name
-    # - Country Code
-    # - Year
-    # - GDP
-    #
-    # So let's pivot all those year-columns into two: Year and GDP
-    gdp_df = raw_gdp_df.melt(
-        ['Country Code'],
-        [str(x) for x in range(MIN_YEAR, MAX_YEAR + 1)],
-        'Year',
-        'GDP',
+# Bagian analisis tambahan
+st.header('Analisis Lanjutan')
+with st.expander('Optimasi Kondisi Reaksi'):
+    st.write("""
+    Berdasarkan parameter yang dimasukkan, berikut rekomendasi optimasi:
+    """)
+    
+    data = {
+        'Parameter': ['Suhu', 'pH', 'Konsentrasi', 'Pelarut'],
+        'Nilai Saat Ini': [f"{temperature}°C", ph, f"{concentration} M", solvent],
+        'Rekomendasi': [
+            f"{temperature + 10}°C" if temperature < 100 else "Cukup",
+            "Asam (pH 3-6)" if ph > 6 else "Basa (pH 8-11)" if ph < 8 else "Netral (baik)",
+            f"{concentration * 1.2:.1f} M" if concentration < 3 else "Cukup",
+            "Pertahankan" if solvent in ['Air', 'Etanol'] else "Coba ganti ke Air"
+        ]
+    }
+    
+    st.table(pd.DataFrame(data))
+
+with st.expander('Simpan Hasil Analisis'):
+    st.download_button(
+        label="Unduh Laporan PDF",
+        data="Ini adalah simulasi laporan PDF. Dalam aplikasi nyata akan berisi data aktual.",
+        file_name="reaction_analysis.pdf",
+        mime="application/pdf"
     )
 
-    # Convert years from string to integers
-    gdp_df['Year'] = pd.to_numeric(gdp_df['Year'])
-
-    return gdp_df
-
-gdp_df = get_gdp_data()
-
-# -----------------------------------------------------------------------------
-# Draw the actual page
-
-# Set the title that appears at the top of the page.
-'''
-# :earth_americas: GDP dashboard
-
-Browse GDP data from the [World Bank Open Data](https://data.worldbank.org/) website. As you'll
-notice, the data only goes to 2022 right now, and datapoints for certain years are often missing.
-But it's otherwise a great (and did I mention _free_?) source of data.
-'''
-
-# Add some spacing
-''
-''
-
-min_value = gdp_df['Year'].min()
-max_value = gdp_df['Year'].max()
-
-from_year, to_year = st.slider(
-    'Which years are you interested in?',
-    min_value=min_value,
-    max_value=max_value,
-    value=[min_value, max_value])
-
-countries = gdp_df['Country Code'].unique()
-
-if not len(countries):
-    st.warning("Select at least one country")
-
-selected_countries = st.multiselect(
-    'Which countries would you like to view?',
-    countries,
-    ['DEU', 'FRA', 'GBR', 'BRA', 'MEX', 'JPN'])
-
-''
-''
-''
-
-# Filter the data
-filtered_gdp_df = gdp_df[
-    (gdp_df['Country Code'].isin(selected_countries))
-    & (gdp_df['Year'] <= to_year)
-    & (from_year <= gdp_df['Year'])
-]
-
-st.header('GDP over time', divider='gray')
-
-''
-
-st.line_chart(
-    filtered_gdp_df,
-    x='Year',
-    y='GDP',
-    color='Country Code',
-)
-
-''
-''
-
-
-first_year = gdp_df[gdp_df['Year'] == from_year]
-last_year = gdp_df[gdp_df['Year'] == to_year]
-
-st.header(f'GDP in {to_year}', divider='gray')
-
-''
-
-cols = st.columns(4)
-
-for i, country in enumerate(selected_countries):
-    col = cols[i % len(cols)]
-
-    with col:
-        first_gdp = first_year[first_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-        last_gdp = last_year[last_year['Country Code'] == country]['GDP'].iat[0] / 1000000000
-
-        if math.isnan(first_gdp):
-            growth = 'n/a'
-            delta_color = 'off'
-        else:
-            growth = f'{last_gdp / first_gdp:,.2f}x'
-            delta_color = 'normal'
-
-        st.metric(
-            label=f'{country} GDP',
-            value=f'{last_gdp:,.0f}B',
-            delta=growth,
-            delta_color=delta_color
-        )
+# Catatan kaki
+st.caption("""
+Aplikasi ini menggunakan model prediksi sederhana untuk tujuan demonstrasi. 
+Hasil aktual mungkin berbeda tergantung kondisi eksperimen yang sebenarnya.
+""")
