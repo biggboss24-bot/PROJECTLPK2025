@@ -7,7 +7,7 @@ if 'reaction_history' not in st.session_state:
     st.session_state.reaction_history = []
 
 # 🔹 Judul aplikasi
-st.title('🤬 Reaction Pathway Predictor ')
+st.title('Reaction Navigator ')
 st.subheader('Prediksi Jalur Reaksi Berdasarkan Struktur Sederhana dan Parameter Reaksi')
 
 # 🛠️ Sidebar - Parameter Reaksi
