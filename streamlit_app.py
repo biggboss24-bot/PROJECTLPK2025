@@ -8,35 +8,37 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Raleway:wght@400;600&family=Open+Sans&display=swap');
 
     .stApp {
-        background-image: url('https://images.unsplash.com/photo-1581091870627-3c37b90c7857');
+        background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1581091870627-3c37b90c7857');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: #f0f8ff;
+        color: #ffffff;
         font-family: 'Open Sans', sans-serif;
     }
 
     .block-container {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(0, 0, 0, 0.5);
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     h1 {
         font-family: 'Orbitron', sans-serif;
         font-size: 3em;
         color: #00e5ff;
-        text-shadow: 1px 1px 4px #000000;
+        text-shadow: 2px 2px 6px #000000;
     }
 
     h2, h3, h4 {
         font-family: 'Raleway', sans-serif;
-        color: #f8f9fa;
+        color: #ffffff;
+        text-shadow: 1px 1px 3px #000000;
     }
 
     p, li, span, div {
         font-family: 'Open Sans', sans-serif;
-        color: #f8f9fa;
+        color: #ffffff;
+        text-shadow: 1px 1px 2px #000000;
     }
 
     code {
@@ -108,27 +110,3 @@ if st.session_state.reaction_history:
         st.markdown(f"**Reaksi #{len(st.session_state.reaction_history) - idx + 1}:**")
         st.markdown(f"- Waktu: {h['time']}")
         st.markdown(f"- Reaktan: {h['r1']} + {h['r2']}")
-        st.markdown(f"- Jalur: {h['name']}")
-        st.markdown(f"- Produk: {h['products']}")
-        st.markdown(f"- Energi Aktivasi: {h['Ea']}")
-        st.markdown(f"- Termodinamika: {h['thermo']}")
-        st.markdown('---')
-
-# Simpan laporan
-with st.expander("Simpan Laporan"):
-    if st.session_state.reaction_history:
-        laporan = ""
-        for idx, h in enumerate(st.session_state.reaction_history, 1):
-            laporan += f"Reaksi #{idx} — {h['time']}\n"
-            laporan += f"Reaktan: {h['r1']} + {h['r2']}\n"
-            laporan += f"Jalur: {h['name']}\n"
-            laporan += f"Produk: {h['products']}\n"
-            laporan += f"Energi Aktivasi: {h['Ea']}\n"
-            laporan += f"Termodinamika: {h['thermo']}\n"
-            laporan += "-"*40 + "\n"
-        st.download_button("Unduh Laporan TXT",
-                           data=laporan,
-                           file_name="laporan_reaksi.txt",
-                           mime="text/plain")
-    else:
-        st.info("Belum ada reaksi yang bisa disimpan.")
