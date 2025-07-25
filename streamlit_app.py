@@ -13,7 +13,7 @@ st.subheader('Prediksi Jalur Reaksi Berdasarkan Struktur Sederhana dan Parameter
 # 🛠️ Sidebar - Parameter Reaksi
 with st.sidebar:
     st.header('🔧 Parameter Reaksi')
-    temperature = st.slider('Suhu (°C)', 0, 200, 25)
+    temperature = st.number_input('Suhu (°C)', min_value=0, max_value=200, value=25, step=1)
     ph = st.slider('pH', 0, 14, 7)
     concentration = st.slider('Konsentrasi (mol/L)', 0.1, 5.0, 1.0)
     solvent = st.selectbox('Pelarut', ['Air', 'Etanol', 'Aseton', 'Dietil Eter', 'DMSO'])
@@ -27,13 +27,11 @@ with col1: reactant1 = st.text_input('Reaktan 1 (Contoh: CH3COOH)', 'CH3COOH')
 with col2: reactant2 = st.text_input('Reaktan 2 (Contoh: C2H5OH)', 'C2H5OH')
 
 # 🪠 Fungsi Prediksi Jalur Reaksi
-
 def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
     r1 = r1.strip().upper()
     r2 = r2.strip().upper()
     pathways = []
 
-    # Pola esterifikasi
     if ('COOH' in r1 and 'OH' in r2) or ('COOH' in r2 and 'OH' in r1):
         pathways.append({
             'name': 'Esterifikasi Umum',
@@ -42,8 +40,6 @@ def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
             'activation_energy': 70 - (ph * 1.5) - (temp * 0.2),
             'thermodynamics': 'Endotermik'
         })
-
-    # Pola netralisasi
     elif ('HCL' in r1 and 'NAOH' in r2) or ('NAOH' in r1 and 'HCL' in r2) or ('OH' in r1 and 'H' in r2) or ('OH' in r2 and 'H' in r1):
         pathways.append({
             'name': 'Netralisasi Asam-Basa',
@@ -52,8 +48,6 @@ def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
             'activation_energy': 45 - (ph * 1.2) - (temp * 0.1),
             'thermodynamics': 'Eksotermik'
         })
-
-    # Reaksi adisi alkena
     elif 'C=C' in r1 or 'C=C' in r2:
         pathways.append({
             'name': 'Adisi ke Alkena',
@@ -62,8 +56,6 @@ def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
             'activation_energy': 65 - (ph * 1.2) - (temp * 0.2),
             'thermodynamics': 'Eksotermik'
         })
-
-    # Reaksi gugus amino + asam karboksilat
     elif ('NH2' in r1 and 'COOH' in r2) or ('NH2' in r2 and 'COOH' in r1):
         pathways.append({
             'name': 'Pembentukan Amida',
@@ -72,7 +64,6 @@ def predict_reaction_pathway(r1, r2, temp, ph, conc, solvent, catalyst=None):
             'activation_energy': 80 - (ph * 1.3) - (temp * 0.15),
             'thermodynamics': 'Endotermik'
         })
-
     else:
         pathways.append({
             'name': 'Reaksi Umum (Tidak Dikenali)',
@@ -105,7 +96,6 @@ if st.button('🔍 Prediksi Jalur Reaksi'):
             st.code(', '.join(res['products']))
             st.divider()
 
-            # Simpan ke memori
             st.session_state.reaction_history.append({
                 'time': datetime.now().strftime('%H:%M:%S'),
                 'r1': reactant1,
