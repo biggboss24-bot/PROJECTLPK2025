@@ -8,16 +8,16 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Raleway:wght@400;600&family=Open+Sans&display=swap');
 
     .stApp {
-        background-image: url('https://images.unsplash.com/photo-1581092787763-4a6a3e4f2258');
+        background-image: url('https://images.unsplash.com/photo-1581091870627-3c37b90c7857');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-        color: white;
+        color: #f0f8ff;
         font-family: 'Open Sans', sans-serif;
     }
 
     .block-container {
-        background-color: rgba(0, 0, 0, 0.6);
+        background-color: rgba(255, 255, 255, 0.2);
         padding: 2rem;
         border-radius: 10px;
     }
@@ -31,11 +31,12 @@ st.markdown("""
 
     h2, h3, h4 {
         font-family: 'Raleway', sans-serif;
-        color: #80deea;
+        color: #f8f9fa;
     }
 
     p, li, span, div {
         font-family: 'Open Sans', sans-serif;
+        color: #f8f9fa;
     }
 
     code {
@@ -105,12 +106,12 @@ if st.session_state.reaction_history:
     st.markdown('### Riwayat Prediksi')
     for idx, h in enumerate(st.session_state.reaction_history[::-1], 1):
         st.markdown(f"**Reaksi #{len(st.session_state.reaction_history) - idx + 1}:**")
-        st.markdown(f"- ⏱️ Waktu: {h['time']}")
-        st.markdown(f"- ⚗️ Reaktan: {h['r1']} + {h['r2']}")
-        st.markdown(f"- 🔬 Jalur: {h['name']}")
-        st.markdown(f"- 🔗 Produk: {h['products']}")
-        st.markdown(f"- 🔥 Energi Aktivasi: {h['Ea']}")
-        st.markdown(f"- 🌡️ Termodinamika: {h['thermo']}")
+        st.markdown(f"- Waktu: {h['time']}")
+        st.markdown(f"- Reaktan: {h['r1']} + {h['r2']}")
+        st.markdown(f"- Jalur: {h['name']}")
+        st.markdown(f"- Produk: {h['products']}")
+        st.markdown(f"- Energi Aktivasi: {h['Ea']}")
+        st.markdown(f"- Termodinamika: {h['thermo']}")
         st.markdown('---')
 
 # Simpan laporan
