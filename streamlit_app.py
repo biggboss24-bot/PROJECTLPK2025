@@ -2,48 +2,60 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# 🌄 Tambahkan Background & Font Variatif
+# 🌟 Tambahkan Background Gambar Laboratorium & Tema Lebih Cerah
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Raleway:wght@400;600&family=Open+Sans&display=swap');
 
     .stApp {
-        background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1581091870627-3c37b90c7857');
+        background-image: url('https://images.unsplash.com/photo-1581092334542-231b13f643b6');
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
         color: #ffffff;
         font-family: 'Open Sans', sans-serif;
+        position: relative;
+    }
+
+    .stApp::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4); /* Overlay gelap agar teks tetap kontras */
+        z-index: 0;
     }
 
     .block-container {
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(255, 255, 255, 0.85);
         padding: 2rem;
         border-radius: 12px;
+        z-index: 1;
+        position: relative;
     }
 
     h1 {
         font-family: 'Orbitron', sans-serif;
         font-size: 3em;
-        color: #00e5ff;
-        text-shadow: 2px 2px 6px #000000;
+        color: #004d99;
+        text-shadow: 2px 2px 4px #ffffff;
     }
 
     h2, h3, h4 {
         font-family: 'Raleway', sans-serif;
-        color: #ffffff;
-        text-shadow: 1px 1px 3px #000000;
+        color: #003366;
     }
 
     p, li, span, div {
         font-family: 'Open Sans', sans-serif;
-        color: #ffffff;
-        text-shadow: 1px 1px 2px #000000;
+        color: #202020;
     }
 
     code {
         font-family: 'Courier New', monospace;
-        background-color: rgba(255,255,255,0.1);
+        background-color: rgba(0,0,0,0.05);
         padding: 2px 6px;
         border-radius: 5px;
     }
@@ -110,3 +122,27 @@ if st.session_state.reaction_history:
         st.markdown(f"**Reaksi #{len(st.session_state.reaction_history) - idx + 1}:**")
         st.markdown(f"- Waktu: {h['time']}")
         st.markdown(f"- Reaktan: {h['r1']} + {h['r2']}")
+        st.markdown(f"- Jalur: {h['name']}")
+        st.markdown(f"- Produk: {h['products']}")
+        st.markdown(f"- Energi Aktivasi: {h['Ea']}")
+        st.markdown(f"- Termodinamika: {h['thermo']}")
+        st.markdown('---')
+
+# Simpan laporan
+with st.expander("Simpan Laporan"):
+    if st.session_state.reaction_history:
+        laporan = ""
+        for idx, h in enumerate(st.session_state.reaction_history, 1):
+            laporan += f"Reaksi #{idx} — {h['time']}\n"
+            laporan += f"Reaktan: {h['r1']} + {h['r2']}\n"
+            laporan += f"Jalur: {h['name']}\n"
+            laporan += f"Produk: {h['products']}\n"
+            laporan += f"Energi Aktivasi: {h['Ea']}\n"
+            laporan += f"Termodinamika: {h['thermo']}\n"
+            laporan += "-"*40 + "\n"
+        st.download_button("Unduh Laporan TXT",
+                           data=laporan,
+                           file_name="laporan_reaksi.txt",
+                           mime="text/plain")
+    else:
+        st.info("Belum ada reaksi yang bisa disimpan.")
