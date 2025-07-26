@@ -81,7 +81,7 @@ if 'reaction_history' not in st.session_state:
 st.title('🔬 Reaction Navigator')
 st.subheader('Prediksi Jalur Reaksi Berdasarkan Input Senyawa')
 
-# 🧾 Sidebar parameter
+# 🗞 Sidebar parameter
 with st.sidebar:
     st.header('Parameter Reaksi')
     temperature = st.number_input('Suhu (°C)', 0, 200, 25)
@@ -91,7 +91,7 @@ with st.sidebar:
     katalis = st.checkbox('Menggunakan Katalis?')
     katalis_jenis = st.selectbox('Jenis Katalis', ['Asam', 'Basa', 'Enzim']) if katalis else None
 
-# 🧾 Input reaktan
+# 🗞 Input reaktan
 st.markdown('## Masukkan Reaktan')
 reaktan1 = st.text_input('Reaktan 1')
 reaktan2 = st.text_input('Reaktan 2')
@@ -106,7 +106,7 @@ if st.button('Prediksi Jalur Reaksi'):
             st.write(f"**Produk:** {hasil['products']}")
             st.write(f"**Energi Aktivasi:** {hasil['Ea']}")
             st.write(f"**Termodinamika:** {hasil['thermo']}")
-            
+
             # Simpan ke riwayat
             st.session_state.reaction_history.append({
                 'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -122,7 +122,7 @@ if st.button('Prediksi Jalur Reaksi'):
     else:
         st.warning('Harap masukkan kedua reaktan.')
 
-# 🧾 Riwayat prediksi
+# 🗞 Riwayat prediksi
 if st.session_state.reaction_history:
     st.markdown('## Riwayat Prediksi')
     for i, h in enumerate(reversed(st.session_state.reaction_history), 1):
@@ -135,7 +135,7 @@ if st.session_state.reaction_history:
         st.markdown(f"- Termodinamika: {h['thermo']}")
         st.markdown("---")
 
-# 💾 Ekspor laporan
+# 📂 Ekspor laporan
 with st.expander("📄 Unduh Laporan Reaksi"):
     if st.session_state.reaction_history:
         laporan = ""
@@ -147,7 +147,7 @@ with st.expander("📄 Unduh Laporan Reaksi"):
             laporan += f"Energi Aktivasi: {h['Ea']}\n"
             laporan += f"Termodinamika: {h['thermo']}\n"
             laporan += "-"*40 + "\n"
-        st.download_button("📥 Unduh TXT",
+        st.download_button("📅 Unduh TXT",
                            data=laporan,
                            file_name="laporan_reaksi.txt",
                            mime="text/plain")
