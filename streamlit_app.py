@@ -21,52 +21,75 @@ st.markdown("""
     h1, h2, h3, h4 {
         color: #00ffff;
     }
-    .reaction-box {
-        background-color: rgba(0, 128, 255, 0.2);
-        border-radius: 10px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-left: 5px solid #00ffff;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# 🧪 Database reaksi kimia
+# 🧪 Database reaksi kimia dengan saran kondisi
 REACTION_DATABASE = [
     {
         'reactants': ['NaOH', 'HCl'],
         'name': 'Reaksi Netralisasi',
         'products': 'NaCl + H₂O',
         'Ea': '20 kJ/mol',
-        'thermo': 'Eksotermik'
+        'thermo': 'Eksotermik',
+        'saran': {
+            'suhu': '25–30°C',
+            'pH': '7 (netral)',
+            'pelarut': 'Air',
+            'katalis': 'Tidak diperlukan'
+        }
     },
     {
         'reactants': ['C₂H₅OH', 'CH₃COOH'],
         'name': 'Esterifikasi',
         'products': 'CH₃COOC₂H₅ + H₂O',
         'Ea': '65 kJ/mol',
-        'thermo': 'Endotermik'
+        'thermo': 'Endotermik',
+        'saran': {
+            'suhu': '60–80°C',
+            'pH': '4–5',
+            'pelarut': 'Asam asetat berlebih',
+            'katalis': 'Asam sulfat (H₂SO₄)'
+        }
     },
     {
         'reactants': ['AgNO₃', 'NaCl'],
         'name': 'Presipitasi',
         'products': 'AgCl↓ + NaNO₃',
         'Ea': '10 kJ/mol',
-        'thermo': 'Netral'
+        'thermo': 'Netral',
+        'saran': {
+            'suhu': '25°C',
+            'pH': '6–7',
+            'pelarut': 'Air',
+            'katalis': 'Tidak diperlukan'
+        }
     },
     {
         'reactants': ['H₂', 'Cl₂'],
         'name': 'Reaksi Sintesis',
         'products': '2HCl',
         'Ea': '75 kJ/mol',
-        'thermo': 'Eksotermik'
+        'thermo': 'Eksotermik',
+        'saran': {
+            'suhu': '250–400°C',
+            'pH': '-',
+            'pelarut': 'Gas',
+            'katalis': 'Cahaya UV'
+        }
     },
     {
         'reactants': ['CaCO₃', 'HCl'],
         'name': 'Reaksi Asam Basa',
         'products': 'CaCl₂ + CO₂ + H₂O',
         'Ea': '35 kJ/mol',
-        'thermo': 'Eksotermik'
+        'thermo': 'Eksotermik',
+        'saran': {
+            'suhu': '25–35°C',
+            'pH': '<4',
+            'pelarut': 'Air',
+            'katalis': 'Tidak diperlukan'
+        }
     }
 ]
 
@@ -108,16 +131,18 @@ if st.button('Prediksi Jalur Reaksi'):
     if reaktan1 and reaktan2:
         hasil = cari_reaksi(reaktan1, reaktan2)
         if hasil:
-            st.success('✅ Jalur reaksi ditemukan!')
+            st.success('Jalur reaksi ditemukan!')
+            st.write(f"**Nama Reaksi:** {hasil['name']}")
+            st.write(f"**Produk:** {hasil['products']}")
+            st.write(f"**Energi Aktivasi:** {hasil['Ea']}")
+            st.write(f"**Termodinamika:** {hasil['thermo']}")
 
-            # 💡 Menampilkan hasil dalam card terpisah
-            with st.container():
-                st.markdown('<div class="reaction-box">', unsafe_allow_html=True)
-                st.markdown(f"**🔹 Nama Reaksi:** {hasil['name']}")
-                st.markdown(f"**🔸 Produk:** `{hasil['products']}`")
-                st.markdown(f"**🧬 Energi Aktivasi:** {hasil['Ea']}")
-                st.markdown(f"**🔥 Termodinamika:** {hasil['thermo']}")
-                st.markdown('</div>', unsafe_allow_html=True)
+            # 👉 Saran kondisi
+            st.markdown("### 💡 Saran Kondisi Reaksi")
+            st.write(f"- Suhu: {hasil['saran']['suhu']}")
+            st.write(f"- pH: {hasil['saran']['pH']}")
+            st.write(f"- Pelarut: {hasil['saran']['pelarut']}")
+            st.write(f"- Katalis: {hasil['saran']['katalis']}")
 
             # Simpan ke riwayat
             st.session_state.reaction_history.append({
@@ -130,22 +155,22 @@ if st.button('Prediksi Jalur Reaksi'):
                 'thermo': hasil['thermo']
             })
         else:
-            st.warning('⚠️ Reaksi tidak ditemukan dalam database.')
+            st.warning('Reaksi tidak ditemukan dalam database.')
     else:
-        st.warning('⚠️ Harap masukkan kedua reaktan.')
+        st.warning('Harap masukkan kedua reaktan.')
 
 # 🧾 Riwayat prediksi
 if st.session_state.reaction_history:
-    st.markdown('## 📚 Riwayat Prediksi')
+    st.markdown('## Riwayat Prediksi')
     for i, h in enumerate(reversed(st.session_state.reaction_history), 1):
-        st.markdown('<div class="reaction-box">', unsafe_allow_html=True)
-        st.markdown(f"**Reaksi #{i}** ({h['time']})")
-        st.markdown(f"**Reaktan:** {h['r1']} + {h['r2']}")
-        st.markdown(f"**Jalur:** {h['name']}")
-        st.markdown(f"**Produk:** `{h['products']}`")
-        st.markdown(f"**Energi Aktivasi:** {h['Ea']}")
-        st.markdown(f"**Termodinamika:** {h['thermo']}")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(f"### Reaksi #{i}")
+        st.markdown(f"- Waktu: {h['time']}")
+        st.markdown(f"- Reaktan: {h['r1']} + {h['r2']}")
+        st.markdown(f"- Jalur: {h['name']}")
+        st.markdown(f"- Produk: {h['products']}")
+        st.markdown(f"- Energi Aktivasi: {h['Ea']}")
+        st.markdown(f"- Termodinamika: {h['thermo']}")
+        st.markdown("---")
 
 # 💾 Ekspor laporan
 with st.expander("📄 Unduh Laporan Reaksi"):
