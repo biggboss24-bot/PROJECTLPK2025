@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# 🌄 Gaya tampilan latar belakang
+# 🌄 Gaya tampilan
 st.markdown("""
     <style>
     .stApp {
@@ -18,111 +18,138 @@ st.markdown("""
         padding: 2rem;
         border-radius: 10px;
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
         color: #00ffff;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 🌟 Database awal reaksi
-if "reaction_database" not in st.session_state:
-    st.session_state.reaction_database = [
-        {
-            'reactants': ['NaOH', 'HCl'],
-            'name': 'Netralisasi',
-            'products': 'NaCl + H₂O',
-            'Ea': '20 kJ/mol',
-            'thermo': 'Eksotermik',
-            'type': 'Netralisasi'
-        },
-        {
-            'reactants': ['CH₄', 'O₂'],
-            'name': 'Pembakaran Metana',
-            'products': 'CO₂ + H₂O',
-            'Ea': '60 kJ/mol',
-            'thermo': 'Eksotermik',
-            'type': 'Pembakaran'
-        }
-    ]
-
-# 🕘 Inisialisasi riwayat reaksi
-if 'reaction_history' not in st.session_state:
-    st.session_state.reaction_history = []
+# 🧪 Database reaksi kimia
+REACTION_DATABASE = [
+    {
+        'reactants': ['NaOH', 'HCl'],
+        'name': 'Reaksi Netralisasi',
+        'products': 'NaCl + H₂O',
+        'Ea': '20 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+    {
+        'reactants': ['C₂H₅OH', 'CH₃COOH'],
+        'name': 'Esterifikasi',
+        'products': 'CH₃COOC₂H₅ + H₂O',
+        'Ea': '65 kJ/mol',
+        'thermo': 'Endotermik'
+    },
+    {
+        'reactants': ['AgNO₃', 'NaCl'],
+        'name': 'Presipitasi',
+        'products': 'AgCl↓ + NaNO₃',
+        'Ea': '10 kJ/mol',
+        'thermo': 'Netral'
+    },
+    {
+        'reactants': ['H₂', 'Cl₂'],
+        'name': 'Reaksi Sintesis',
+        'products': '2HCl',
+        'Ea': '75 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+    {
+        'reactants': ['CaCO₃', 'HCl'],
+        'name': 'Reaksi Asam Basa',
+        'products': 'CaCl₂ + CO₂ + H₂O',
+        'Ea': '35 kJ/mol',
+        'thermo': 'Eksotermik'
+    }
+]
 
 # 🔎 Fungsi pencarian reaksi
 def cari_reaksi(reaktan1, reaktan2):
     r1 = reaktan1.strip().lower()
     r2 = reaktan2.strip().lower()
-    for reaksi in st.session_state.reaction_database:
+    for reaksi in REACTION_DATABASE:
         reactant_set = set([r.lower() for r in reaksi['reactants']])
         if set([r1, r2]) == reactant_set:
             return reaksi
     return None
 
-# 🧪 Judul utama
-st.title('🔬 Reaction Navigator')
-st.subheader('Prediksi Jalur Reaksi Kimia & Penambahan Reaksi')
+# 🔢 Inisialisasi session
+if 'reaction_history' not in st.session_state:
+    st.session_state.reaction_history = []
 
-# 👉 Input reaktan untuk prediksi
-st.markdown("## 🔍 Prediksi Reaksi")
+# 🧪 Judul
+st.title('🔬 Reaction Navigator')
+st.subheader('Prediksi Jalur Reaksi Berdasarkan Input Senyawa')
+
+# 🗞 Sidebar parameter
+with st.sidebar:
+    st.header('Parameter Reaksi')
+    temperature = st.number_input('Suhu (°C)', 0, 200, 25)
+    ph = st.slider('pH', 0, 14, 7)
+    konsentrasi = st.slider('Konsentrasi (mol/L)', 0.1, 5.0, 1.0)
+    pelarut = st.selectbox('Pelarut', ['Air', 'Etanol', 'Aseton', 'DMSO'])
+    katalis = st.checkbox('Menggunakan Katalis?')
+    katalis_jenis = st.selectbox('Jenis Katalis', ['Asam', 'Basa', 'Enzim']) if katalis else None
+
+# 🗞 Input reaktan
+st.markdown('## Masukkan Reaktan')
 reaktan1 = st.text_input('Reaktan 1')
 reaktan2 = st.text_input('Reaktan 2')
 
-if st.button("Prediksi Jalur Reaksi"):
-    hasil = cari_reaksi(reaktan1, reaktan2)
-    if hasil:
-        st.success(f"Reaksi Ditemukan: {hasil['name']}")
-        st.write(f"**Produk:** {hasil['products']}")
-        st.write(f"**Jenis:** {hasil['type']}")
-        st.write(f"**Energi Aktivasi:** {hasil['Ea']}")
-        st.write(f"**Termodinamika:** {hasil['thermo']}")
-        # Simpan ke riwayat
-        st.session_state.reaction_history.append({
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'r1': reaktan1,
-            'r2': reaktan2,
-            'name': hasil['name'],
-            'products': hasil['products'],
-            'type': hasil['type'],
-            'Ea': hasil['Ea'],
-            'thermo': hasil['thermo']
-        })
+# 🚀 Tombol prediksi
+if st.button('Prediksi Jalur Reaksi'):
+    if reaktan1 and reaktan2:
+        hasil = cari_reaksi(reaktan1, reaktan2)
+        if hasil:
+            st.success('Jalur reaksi ditemukan!')
+            st.write(f"**Nama Reaksi:** {hasil['name']}")
+            st.write(f"**Produk:** {hasil['products']}")
+            st.write(f"**Energi Aktivasi:** {hasil['Ea']}")
+            st.write(f"**Termodinamika:** {hasil['thermo']}")
+
+            # Simpan ke riwayat
+            st.session_state.reaction_history.append({
+                'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'r1': reaktan1,
+                'r2': reaktan2,
+                'name': hasil['name'],
+                'products': hasil['products'],
+                'Ea': hasil['Ea'],
+                'thermo': hasil['thermo']
+            })
+        else:
+            st.warning('Reaksi tidak ditemukan dalam database.')
     else:
-        st.warning("Reaksi tidak ditemukan di database!")
+        st.warning('Harap masukkan kedua reaktan.')
 
-# ➕ Tambah reaksi ke database
-st.markdown("## ➕ Tambah Reaksi Baru")
-with st.form("tambah_reaksi"):
-    new_r1 = st.text_input("Reaktan 1", key="new_r1")
-    new_r2 = st.text_input("Reaktan 2", key="new_r2")
-    new_product = st.text_input("Produk Reaksi")
-    new_type = st.selectbox("Jenis Reaksi", ['Netralisasi', 'Pembakaran', 'Dekomposisi', 'Sintesis', 'Substitusi'])
-    new_name = st.text_input("Nama Reaksi")
-    new_Ea = st.text_input("Energi Aktivasi (misal: 35 kJ/mol)")
-    new_thermo = st.selectbox("Sifat Termodinamika", ['Eksotermik', 'Endotermik', 'Netral'])
-
-    submitted = st.form_submit_button("✅ Tambahkan ke Database")
-    if submitted:
-        st.session_state.reaction_database.append({
-            'reactants': [new_r1, new_r2],
-            'name': new_name,
-            'products': new_product,
-            'Ea': new_Ea,
-            'thermo': new_thermo,
-            'type': new_type
-        })
-        st.success("Reaksi berhasil ditambahkan!")
-
-# 🧾 Tampilkan riwayat
+# 🗞 Riwayat prediksi
 if st.session_state.reaction_history:
-    st.markdown("## 📜 Riwayat Prediksi")
+    st.markdown('## Riwayat Prediksi')
     for i, h in enumerate(reversed(st.session_state.reaction_history), 1):
-        st.markdown(f"### 🔁 Reaksi #{i}")
-        st.markdown(f"- ⏰ Waktu: {h['time']}")
-        st.markdown(f"- 🧪 Reaktan: {h['r1']} + {h['r2']}")
-        st.markdown(f"- 🔬 Nama Reaksi: {h['name']}")
-        st.markdown(f"- ⚗️ Produk: {h['products']}")
-        st.markdown(f"- 🧭 Jenis: {h['type']}")
-        st.markdown(f"- 🔥 Energi Aktivasi: {h['Ea']}")
-        st.markdown(f"- 🌡️ Termodinamika: {h['thermo']}")
+        st.markdown(f"### Reaksi #{i}")
+        st.markdown(f"- Waktu: {h['time']}")
+        st.markdown(f"- Reaktan: {h['r1']} + {h['r2']}")
+        st.markdown(f"- Jalur: {h['name']}")
+        st.markdown(f"- Produk: {h['products']}")
+        st.markdown(f"- Energi Aktivasi: {h['Ea']}")
+        st.markdown(f"- Termodinamika: {h['thermo']}")
         st.markdown("---")
+
+# 📂 Ekspor laporan
+with st.expander("📄 Unduh Laporan Reaksi"):
+    if st.session_state.reaction_history:
+        laporan = ""
+        for i, h in enumerate(st.session_state.reaction_history, 1):
+            laporan += f"Reaksi #{i} - {h['time']}\n"
+            laporan += f"Reaktan: {h['r1']} + {h['r2']}\n"
+            laporan += f"Jalur: {h['name']}\n"
+            laporan += f"Produk: {h['products']}\n"
+            laporan += f"Energi Aktivasi: {h['Ea']}\n"
+            laporan += f"Termodinamika: {h['thermo']}\n"
+            laporan += "-"*40 + "\n"
+        st.download_button("📅 Unduh TXT",
+                           data=laporan,
+                           file_name="laporan_reaksi.txt",
+                           mime="text/plain")
+    else:
+        st.info("Belum ada reaksi untuk disimpan.")
