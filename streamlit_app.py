@@ -1,100 +1,131 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import base64
 
-# --- Styling: Gambar Background + Font ---
-def set_background(image_file):
-    with open(image_file, "rb") as f:
-        data = base64.b64encode(f.read()).decode()
-    st.markdown(f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/jpg;base64,{data}");
-            background-size: cover;
-            background-attachment: fixed;
-        }}
-        .block-container {{
-            background-color: rgba(0,0,0,0.5);
-            padding: 2rem;
-            border-radius: 10px;
-        }}
-        h1, h2, h3, p, span {{
-            color: white;
-        }}
-        </style>
-    """, unsafe_allow_html=True)
-
-set_background("lab_bg.jpg")
-
-# --- Inisialisasi session_state untuk database dan riwayat ---
-if 'reaction_history' not in st.session_state:
-    st.session_state.reaction_history = []
-
-if 'custom_reactions' not in st.session_state:
-    st.session_state.custom_reactions = {
-        'Netralisasi': {'Asam + Basa': 'Garam + Air'},
-        'Pembakaran': {'CH4 + O2': 'CO2 + H2O'},
-        'Dekomposisi': {'H2O2': 'H2O + O2'}
+# 🌄 Gaya Tampilan (dengan background kimia)
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #001f3f;
+        background-image: url("https://images.unsplash.com/photo-1581091012184-5c1d7e0b4a9c?auto=format&fit=crop&w=1200&q=80");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: white;
     }
+    .block-container {
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 2rem;
+        border-radius: 12px;
+    }
+    h1, h2, h3 {
+        color: cyan;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# --- Judul Aplikasi ---
+# 📚 Database Reaksi Kimia
+REACTION_DATABASE = [
+    {
+        'reactants': ['NaOH', 'HCl'],
+        'name': 'Netralisasi',
+        'products': 'NaCl + H₂O',
+        'Ea': '20 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+    {
+        'reactants': ['CH₃COOH', 'C₂H₅OH'],
+        'name': 'Esterifikasi',
+        'products': 'CH₃COOC₂H₅ + H₂O',
+        'Ea': '65 kJ/mol',
+        'thermo': 'Endotermik'
+    },
+    {
+        'reactants': ['AgNO₃', 'NaCl'],
+        'name': 'Presipitasi',
+        'products': 'AgCl↓ + NaNO₃',
+        'Ea': '10 kJ/mol',
+        'thermo': 'Netral'
+    },
+    {
+        'reactants': ['CaCO₃', 'HCl'],
+        'name': 'Reaksi Asam-Karbonat',
+        'products': 'CaCl₂ + CO₂ + H₂O',
+        'Ea': '35 kJ/mol',
+        'thermo': 'Eksotermik'
+    }
+]
+
+# 🔍 Fungsi Pencarian Reaksi
+def cari_reaksi(r1, r2):
+    r1 = r1.strip().lower()
+    r2 = r2.strip().lower()
+    for item in REACTION_DATABASE:
+        reaktan_db = [r.lower() for r in item['reactants']]
+        if sorted([r1, r2]) == sorted(reaktan_db):
+            return item
+    return None
+
+# 🔁 Inisialisasi Riwayat
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
+# 🧪 Judul
 st.title("🔬 Reaction Navigator")
-st.subheader("Prediksi Jalur Reaksi Berdasarkan Parameter dan Jenis Reaksi")
+st.subheader("Prediksi Jalur Reaksi Berdasarkan Dua Reaktan")
 
-# --- Sidebar: Parameter Reaksi ---
-with st.sidebar:
-    st.header("🔧 Parameter Reaksi")
-    jenis = st.selectbox("Jenis Reaksi", ["Netralisasi", "Pembakaran", "Dekomposisi"])
-    suhu = st.slider("Suhu (°C)", 0, 300, 25)
-    ph = st.slider("pH", 0, 14, 7)
-    konsentrasi = st.number_input("Konsentrasi (mol/L)", 0.1, 5.0, 1.0)
-
-# --- Input Reaktan ---
-st.markdown("### 🧪 Input Reaktan")
+# 📥 Input Reaktan
+st.markdown("## Masukkan Reaktan")
 reaktan1 = st.text_input("Reaktan 1")
-reaktan2 = st.text_input("Reaktan 2 (jika ada)")
+reaktan2 = st.text_input("Reaktan 2")
 
-# --- Prediksi Reaksi ---
-if st.button("🔍 Prediksi Reaksi"):
-    key = f"{reaktan1} + {reaktan2}" if reaktan2 else reaktan1
-    hasil = st.session_state.custom_reactions.get(jenis, {}).get(key, None)
-
-    if hasil:
-        st.success("Prediksi reaksi ditemukan!")
-        st.markdown(f"**Reaksi:** {key} → {hasil}")
-        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Combustion_Reaction.svg/800px-Combustion_Reaction.svg.png", width=400)
-
-        st.session_state.reaction_history.append({
-            'waktu': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'jenis': jenis,
-            'reaksi': f"{key} → {hasil}"
-        })
+# 🔘 Tombol Prediksi
+if st.button("Prediksi Reaksi"):
+    if reaktan1 and reaktan2:
+        hasil = cari_reaksi(reaktan1, reaktan2)
+        if hasil:
+            st.success("✅ Reaksi ditemukan!")
+            st.write(f"**Nama Reaksi:** {hasil['name']}")
+            st.write(f"**Produk:** {hasil['products']}")
+            st.write(f"**Energi Aktivasi:** {hasil['Ea']}")
+            st.write(f"**Sifat Termodinamika:** {hasil['thermo']}")
+            
+            st.session_state.history.append({
+                'waktu': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'r1': reaktan1,
+                'r2': reaktan2,
+                'hasil': hasil
+            })
+        else:
+            st.warning("❌ Reaksi tidak ditemukan dalam database.")
     else:
-        st.error("Reaksi belum ada di database. Tambahkan di bawah!")
+        st.warning("⚠️ Masukkan kedua reaktan terlebih dahulu.")
 
-# --- Tambah Reaksi ke Database ---
-st.markdown("### ➕ Tambahkan Reaksi ke Database")
-with st.form("form_tambah"):
-    jenis_tambah = st.selectbox("Jenis Reaksi Baru", ["Netralisasi", "Pembakaran", "Dekomposisi"])
-    reaktan_baru = st.text_input("Reaktan (cth: HCl + NaOH)")
-    produk_baru = st.text_input("Produk (cth: NaCl + H2O)")
-    tambah = st.form_submit_button("Tambah Reaksi")
-    if tambah and reaktan_baru and produk_baru:
-        if jenis_tambah not in st.session_state.custom_reactions:
-            st.session_state.custom_reactions[jenis_tambah] = {}
-        st.session_state.custom_reactions[jenis_tambah][reaktan_baru] = produk_baru
-        st.success("Reaksi berhasil ditambahkan!")
+# 📜 Tampilkan Riwayat Reaksi
+if st.session_state.history:
+    st.markdown("## 📚 Riwayat Prediksi Reaksi")
+    for i, h in enumerate(reversed(st.session_state.history), 1):
+        st.markdown(f"### Reaksi #{i}")
+        st.markdown(f"- **Waktu:** {h['waktu']}")
+        st.markdown(f"- **Reaktan:** {h['r1']} + {h['r2']}")
+        st.markdown(f"- **Produk:** {h['hasil']['products']}")
+        st.markdown(f"- **Nama Reaksi:** {h['hasil']['name']}")
+        st.markdown(f"- **Ea:** {h['hasil']['Ea']}")
+        st.markdown(f"- **Termodinamika:** {h['hasil']['thermo']}")
+        st.markdown("---")
 
-# --- Riwayat Reaksi ---
-if st.session_state.reaction_history:
-    st.markdown("### 📜 Riwayat Reaksi")
-    for idx, h in enumerate(st.session_state.reaction_history[::-1], 1):
-        st.markdown(f"**{idx}. {h['waktu']}** — *{h['jenis']}*  \n🧪 {h['reaksi']}")
-
-# --- Unduh Riwayat ---
-if st.session_state.reaction_history:
-    if st.download_button("⬇️ Unduh Riwayat Reaksi", 
-                          data="\n".join([f"{h['waktu']} - {h['reaksi']}" for h in st.session_state.reaction_history]), 
-                          file_name="riwayat_reaksi.txt"):
-        st.success("Berhasil diunduh!")
+# 💾 Unduh Laporan
+with st.expander("📥 Unduh Laporan Prediksi"):
+    if st.session_state.history:
+        isi_laporan = ""
+        for i, h in enumerate(st.session_state.history, 1):
+            isi_laporan += f"Reaksi #{i} ({h['waktu']})\n"
+            isi_laporan += f"Reaktan: {h['r1']} + {h['r2']}\n"
+            isi_laporan += f"Produk: {h['hasil']['products']}\n"
+            isi_laporan += f"Nama Reaksi: {h['hasil']['name']}\n"
+            isi_laporan += f"Energi Aktivasi: {h['hasil']['Ea']}\n"
+            isi_laporan += f"Sifat Termodinamika: {h['hasil']['thermo']}\n"
+            isi_laporan += "-"*40 + "\n"
+        st.download_button("📄 Unduh Laporan", isi_laporan, "laporan_reaksi.txt", "text/plain")
+    else:
+        st.info("Belum ada reaksi yang diprediksi.")
