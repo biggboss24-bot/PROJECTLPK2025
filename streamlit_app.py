@@ -1,15 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-import base64
 
-# 🌄 Tambahkan Background dengan Gambar Laboratorium
+# 🌄 Tambahkan Background dari Gambar Online
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Raleway:wght@400;600&family=Open+Sans&display=swap');
 
     .stApp {
-        background-image: url("lab_bg.png");
+        background-image: url("https://images.unsplash.com/photo-1581091012184-7d4b6cfc3bfc?auto=format&fit=crop&w=1920&q=80");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -18,7 +17,7 @@ st.markdown("""
     }
 
     .block-container {
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.6);
         padding: 2rem;
         border-radius: 10px;
     }
@@ -116,7 +115,7 @@ if st.session_state.reaction_history:
         st.markdown('---')
 
 # Simpan laporan
-with st.expander("Simpan Laporan"):
+with st.expander("📄 Simpan Laporan"):
     if st.session_state.reaction_history:
         laporan = ""
         for idx, h in enumerate(st.session_state.reaction_history, 1):
