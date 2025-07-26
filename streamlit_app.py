@@ -1,56 +1,64 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import base64
 
-# 🌄 Tambahkan Background dari Gambar Online
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Raleway:wght@400;600&family=Open+Sans&display=swap');
+# 🌄 Tambahkan Background dengan Gambar Laboratorium
+def set_background():
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url('https://i.imgur.com/2nCt3Sbl.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #ffffff;
+        }}
+        .block-container {{
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            border-radius: 10px;
+        }}
+        h1, h2, h3, h4 {{
+            color: #00e5ff;
+            text-shadow: 1px 1px 4px #000000;
+        }}
+        p, li, span, div {{
+            color: #f8f9fa;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1581091012184-7d4b6cfc3bfc?auto=format&fit=crop&w=1920&q=80");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        color: #ffffff;
-        font-family: 'Open Sans', sans-serif;
-    }
-
-    .block-container {
-        background-color: rgba(0, 0, 0, 0.6);
-        padding: 2rem;
-        border-radius: 10px;
-    }
-
-    h1 {
-        font-family: 'Orbitron', sans-serif;
-        font-size: 3em;
-        color: #00e5ff;
-        text-shadow: 1px 1px 4px #000000;
-    }
-
-    h2, h3, h4 {
-        font-family: 'Raleway', sans-serif;
-        color: #f8f9fa;
-    }
-
-    p, li, span, div {
-        font-family: 'Open Sans', sans-serif;
-        color: #f8f9fa;
-    }
-
-    code {
-        font-family: 'Courier New', monospace;
-        background-color: rgba(255,255,255,0.1);
-        padding: 2px 6px;
-        border-radius: 5px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+set_background()
 
 # 🔢 Inisialisasi memori reaksi selama sesi masih aktif
 if 'reaction_history' not in st.session_state:
     st.session_state.reaction_history = []
+
+# Contoh database reaksi sederhana
+reaction_db = {
+    ('HCl', 'NaOH'): {
+        'name': 'Netralisasi Asam-Basa',
+        'products': 'NaCl + H₂O',
+        'Ea': '10 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+    ('CH3Br', 'NaOH'): {
+        'name': 'Substitusi Nukleofilik SN2',
+        'products': 'CH3OH + NaBr',
+        'Ea': '50 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+    ('CH2=CH2', 'HBr'): {
+        'name': 'Adisi Elektrofilik',
+        'products': 'CH3CH2Br',
+        'Ea': '60 kJ/mol',
+        'thermo': 'Eksotermik'
+    },
+}
 
 # Judul aplikasi
 st.title('Reaction Navigator')
@@ -74,13 +82,20 @@ reactant_2 = st.text_input('Reaktan 2', '')
 # Prediksi jalur reaksi
 if st.button('Prediksi Jalur Reaksi'):
     if reactant_1 and reactant_2:
-        # Prediksi dummy (simulasi)
-        predicted_pathway = {
-            'name': 'Substitusi Nukleofilik SN2',
-            'products': f'{reactant_1}-{reactant_2}',
-            'Ea': '50 kJ/mol',
-            'thermo': 'Eksotermik'
-        }
+        key = (reactant_1.strip(), reactant_2.strip())
+        reverse_key = (reactant_2.strip(), reactant_1.strip())
+
+        if key in reaction_db:
+            predicted_pathway = reaction_db[key]
+        elif reverse_key in reaction_db:
+            predicted_pathway = reaction_db[reverse_key]
+        else:
+            predicted_pathway = {
+                'name': 'Reaksi Tidak Dikenali',
+                'products': f'{reactant_1}-{reactant_2}',
+                'Ea': 'N/A',
+                'thermo': 'Tidak diketahui'
+            }
 
         st.success('Jalur reaksi berhasil diprediksi!')
         st.write(f"**Nama Jalur Reaksi:** {predicted_pathway['name']}")
@@ -115,7 +130,7 @@ if st.session_state.reaction_history:
         st.markdown('---')
 
 # Simpan laporan
-with st.expander("📄 Simpan Laporan"):
+with st.expander("Simpan Laporan"):
     if st.session_state.reaction_history:
         laporan = ""
         for idx, h in enumerate(st.session_state.reaction_history, 1):
